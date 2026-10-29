@@ -198,6 +198,33 @@ function runsFromThisCheckout(pid) {
     return command.includes(`${ROOT}/`) && !nested.some(p => command.includes(`${p}/`));
 }
 
+/** Commands like `node --watch src/www.ts` carry no absolute path; their working directory does. */
+function worksInThisCheckout(pid) {
+    const out = trySh('lsof', ['-a', '-p', String(pid), '-d', 'cwd', '-Fn']) || '';
+    const cwd = out
+        .split('\n')
+        .find(line => line.startsWith('n'))
+        ?.slice(1);
+    if (!cwd) return false;
+    const inside = dir => cwd === dir || cwd.startsWith(`${dir}/`);
+    const nested = Object.keys(readRegistry()).filter(p => p !== ROOT && p.startsWith(`${ROOT}/`));
+    return inside(ROOT) && !nested.some(inside);
+}
+
+/**
+ * What is still alive in a process group we started. A child stuck in a synchronous loop never runs a
+ * JS SIGTERM handler (ts-node-dev's child waiting on its compiler did exactly that): it survives the
+ * group's SIGTERM, ends up with ppid 1 and burns a core for days, holding no port.
+ */
+function groupLeftovers(pgid) {
+    return (trySh('ps', ['-axo', 'pid=,pgid=']) || '')
+        .split('\n')
+        .map(line => line.trim().split(/\s+/).map(Number))
+        .filter(([pid, group]) => group === pgid && pid !== process.pid)
+        .map(([pid]) => pid)
+        .filter(pid => runsFromThisCheckout(pid) || worksInThisCheckout(pid));
+}
+
 function down(env) {
     const registry = readRegistry();
     const mine = registry[env.worktree];
@@ -212,6 +239,17 @@ function down(env) {
         // dev servers spawn children (webpack, next, electron); killing the group takes them too
         signal(pid, 'SIGTERM');
         report.push({ surface, pid, action: 'stopped' });
+    }
+
+    // the leader may be gone while the rest of its group lives on, so every registered group is checked
+    const groups = Object.entries(mine.pids);
+    for (let attempt = 0; attempt < 6 && groups.some(([, pid]) => groupLeftovers(pid).length); attempt += 1)
+        execFileSync('sleep', ['1']);
+    for (const [surface, pid] of groups) {
+        for (const leftover of groupLeftovers(pid)) {
+            signal(leftover, 'SIGKILL');
+            report.push({ surface, pid: leftover, action: 'killed (ignored SIGTERM)' });
+        }
     }
 
     // grandchildren can outlive a SIGTERM to the group; escalate only on processes proven ours

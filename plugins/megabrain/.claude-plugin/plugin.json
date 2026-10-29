@@ -1,5 +1,5 @@
 {
   "name": "megabrain",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Trabalhe um card do ClickUp do link ao PR provado no sistema rodando. O método e as ferramentas ficam no plugin; a config e o conhecimento de cada projeto ficam em <repo>/.megabrain/."
 }
