@@ -29,7 +29,7 @@ Depois `/reload-plugins`. Num projeto novo, rode `/megabrain:init` uma vez.
 | `/megabrain:how <pergunta>` | Como isso funciona: o fluxo de ponta a ponta, onde cada coisa mora e o que é fácil errar. Não muda código. |
 | `/megabrain:teach <pergunta>` | Explica para você entender e confiar, juntando o `how` e o `why`. Serve também para "por que você fez assim e não X?". |
 | `/megabrain:init` | Prepara o projeto: `.megabrain/config.json` e a base vazia. |
-| `/megabrain:tech-decisions <link do card>` | Curadoria antes do dev: fecha as regras duvidosas e as decisões técnicas do card e anexa o documento de decisões ao card. |
+| `/megabrain:tech-decisions <link do card>` | Spec de card médio ou grande, escrita pelo dev que vai implementar: fecha as regras duvidosas e as decisões técnicas, anexa o documento ao card e move para AGUARD \| ANÁLISE TÉCNICA. Card pequeno vai direto para o `card`. |
 | `/megabrain:help` | Os comandos, os playbooks e os scripts; num projeto com `.megabrain/`, também as superfícies e os comandos de cada uma. |
 
 ### Onde fica cada coisa
