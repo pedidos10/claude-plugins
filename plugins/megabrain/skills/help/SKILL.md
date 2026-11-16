@@ -14,7 +14,7 @@ Responda na língua do usuário. Mostre as seções nesta ordem; a única que ro
 |---|---|---|
 | **init** | `/megabrain:init` | Prepara o repositório: lê o código, propõe `.megabrain/config.json` (superfícies, portas, banco, migrations, credencial da seed, runtime do app mobile) e cria a base vazia. Uma vez por projeto. |
 | **card** | `/megabrain:card <link do card>` | Do card do ClickUp ao PR: diz nas próprias palavras o que vai fazer e espera o OK (o único checkpoint), implementa, prova no sistema rodando e entrega o link de criação do PR. |
-| **tech-decisions** | `/megabrain:tech-decisions <link do card>` | Antes do dev pegar o card: fecha as regras de negócio duvidosas e as decisões técnicas nebulosas, ancoradas no código, nos fluxos e no histórico, e anexa o documento de decisões ao card. Não implementa. |
+| **tech-decisions** | `/megabrain:tech-decisions <link do card>` | Spec de card médio ou grande, escrita pelo dev que vai implementar, no status ANÁLISE: fecha as regras de negócio duvidosas e as decisões técnicas nebulosas, ancoradas no código, nos fluxos e no histórico. Item de produto vira premissa para o revisor confirmar. Anexa o documento ao card e move para AGUARD \| ANÁLISE TÉCNICA. Card pequeno não usa: vai direto para o `card`. |
 | **help** | `/megabrain:help` | Este cartão. |
 
 ## Sem card: texto livre

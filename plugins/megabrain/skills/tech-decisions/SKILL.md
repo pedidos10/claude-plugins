@@ -1,26 +1,31 @@
 ---
 name: tech-decisions
-description: "Curate a product card (ClickUp card, spec text, sometimes a Figma) BEFORE a dev picks it up: settle the dubious business rules and nebulous technical calls so the card does not bounce back and forth. Grounds every option in the codebase, in the business rules the megabrain flows already record, and in the history of why the system is the way it is; runs an interactive decision-by-decision flow; produces a document appended to the card (not committed to the repo). Use when you receive a product card and need a system-knowledgeable person to close the gray areas a dev would otherwise guess at or ask about. Invoke with `/megabrain:tech-decisions <card link>`."
+description: "Write the spec of a medium or large card (ClickUp card, spec text, sometimes a Figma) as the dev who will implement it, in the ANÁLISE status, before a senior or the tech lead reviews it in AGUARD | ANÁLISE TÉCNICA: settle the dubious business rules and nebulous technical calls so the card does not bounce back and forth. Grounds every option in the codebase, in the business rules the megabrain flows already record, and in the history of why the system is the way it is; runs an interactive decision-by-decision flow; produces a document appended to the card (not committed to the repo). Small cards skip it and go straight to `/megabrain:card`. Invoke with `/megabrain:tech-decisions <card link>`."
 argument-hint: "[clickup card URL/ID, or paste the spec text]"
 disable-model-invocation: true
 ---
 
 <objective>
-You are helping a senior engineer who curates product tasks (usually a ClickUp card with
-a description, sometimes a Figma) before a dev picks them up. The job is to close the
-NEBULOUS decisions now — dubious business rules above all — so the dev does not have to
-come back to the card with questions.
+You are helping the dev who will implement a medium or large card (usually a ClickUp card
+with a description, sometimes a Figma) write its spec while the card sits in ANÁLISE. The
+job is to close the NEBULOUS decisions now — dubious business rules above all — so the
+work does not bounce back to product halfway through execution.
 
-The output is a **technical-decisions document** that the engineer appends to the card —
-a living base the team iterates on. It does **NOT** go into the repository.
+The output is a **technical-decisions document** that the dev appends to the card —
+a living base the team iterates on. It does **NOT** go into the repository. A senior or the
+tech lead reviews it in AGUARD | ANÁLISE TÉCNICA before the card moves to EXECUTANDO, so
+write it for that reader: what changes and where (the TL;DR), each decision with what it
+beat, the risks, and every assumption they must confirm.
+
+Small cards do not use this skill: they go from ANÁLISE straight to `/megabrain:card`.
 
 The value of this skill is judgment about WHICH decisions to surface (only the genuinely
 nebulous, high-leverage ones), catching where the card **contradicts what the system does
 today**, and giving REALISTIC options grounded in what the codebase already offers (reuse
 vs. build) — not exhaustively enumerating every micro-choice.
 
-This skill is curation only. It runs before `/megabrain:card`, does not plan the
-implementation, and only reads megabrain's knowledge base (the flows).
+This skill writes the spec only. It runs before `/megabrain:card`, does not break the
+work into phases or PRs, and only reads megabrain's knowledge base (the flows).
 </objective>
 
 <inputs>
@@ -29,7 +34,7 @@ The argument is one of:
 - Pasted spec/description text
 - A Figma link (may accompany either of the above)
 
-If nothing is provided, ask the engineer for the card link or the spec text.
+If nothing is provided, ask the dev for the card link or the spec text.
 </inputs>
 
 <workflow>
@@ -40,7 +45,7 @@ If nothing is provided, ask the engineer for the card link or the spec text.
   Also read comments (`clickup_get_task_comments`) — open decisions and prior
   context often live there.
 - If the ClickUp connector is not available in this session, say so and ask the
-  engineer to paste the description instead.
+  dev to paste the description instead.
 - **Attachments are often where the real spec lives.** If the card has an HTML
   prototype, a spreadsheet, or images, pull them with
   `clickup_download_task_attachment` and read them — a clickable prototype
@@ -51,16 +56,16 @@ If nothing is provided, ask the engineer for the card link or the spec text.
   session has one (project `.mcp.json` or user config; find its tools via
   `ToolSearch` — they are deferred, so their schemas are not loaded up front). With
   no Figma server, say so and continue from the spec. The server needs `FIGMA_API_KEY`
-  exported in the engineer's shell environment, holding their own Figma personal
+  exported in the dev's shell environment, holding their own Figma personal
   access token. If the variable is missing the server starts but every call fails
   — when that happens, say plainly that `FIGMA_API_KEY` is not set, then proceed
   from the written spec, the attached prototype and any images. Never block on
-  Figma, and never ask the engineer to paste a token into the chat.
+  Figma, and never ask the dev to paste a token into the chat.
 - Read the whole spec carefully. Note what the card **already answers** — those
   are NOT decisions to re-open.
 
 ## Step 2 — Restate it in your own words (checkpoint)
-Before spawning any investigator, show the engineer, in the card's language:
+Before spawning any investigator, show the dev, in the card's language:
 
 ```
 What the card asks for:   <one or two sentences, plain language>
@@ -69,8 +74,8 @@ What looks dubious:       <bullets — hypotheses, not yet checked against code>
 ```
 
 Do not lead with your own solution. The point is to catch a misreading before it costs a
-round of exploration: if you fixated on a red herring, the engineer corrects it here. Wait
-for the engineer's ok or correction, then continue. This restatement stays in the chat; it
+round of exploration: if you fixated on a red herring, the dev corrects it here. Wait
+for the dev's ok or correction, then continue. This restatement stays in the chat; it
 never goes to the card.
 
 ## Step 3 — Ground it (MANDATORY before proposing any option)
@@ -161,65 +166,32 @@ back and forth. For each decision:
 - In each option's description, state the trade-off honestly (cost, risk, parity,
   contract impact).
 Run multiple rounds until every nebulous decision is settled. Respect answers literally —
-the engineer may override your recommendation or add constraints.
+the dev may override your recommendation or add constraints.
 
 **Keep the rejected options.** As each round is answered, record the options that were NOT
 chosen and the one-line reason each lost — either the trade-off from its own description,
-or what the engineer said when overriding you. Step 6 writes these into the document; they
+or what the dev said when overriding you. Step 6 writes these into the document; they
 are the audit trail that stops the team from re-opening a settled call three weeks later.
 
-## Step 5.5 — Close every product-open item BEFORE offering to deliver (blocking gate)
+## Step 5.5 — Turn every product item into an assumption (blocking gate)
 
-A technical analysis must not reach the card with questions still parked for product.
-An open item on the card is a decision nobody owns: the dev reads it as "wait" or
-"guess", and it silently stalls the task. So this gate runs whenever Step 4/5 left
-anything that needs the requester or PO.
+The dev who writes the spec does not decide product calls (pricing, legal, a promise made
+to a client, a business rule only the requester can set). An item left open on the card is
+a decision nobody owns, and a product call the dev settled alone looks final to everyone
+after them. So every item that needs the requester or PO becomes an assumption the reviewer
+confirms in AGUARD | ANÁLISE TÉCNICA.
 
-**Do not present the document and do not offer the ClickUp push while any item is
-open.** Instead, list the open items and force each one closed with
-`AskUserQuestion` — one question per item, batched up to 4 per call. Every item gets
-these three ways out, and the engineer picks one:
+**Do not present the document and do not offer the ClickUp push while any product item
+lacks an assumption.** For each one, ask with `AskUserQuestion` (batched up to 4 per call)
+which answer to assume, with grounded options and your recommendation first. It becomes a
+decision carrying an `Assumption to validate` line: the assumption, who confirms it (the
+reviewer, or product through the reviewer), and the fallback if they refuse, normally a
+discarded option. Never offer "the dev decides it" as a way out, even when the dev is sure.
 
-1. **The engineer decides it now.** Give the concrete options as usual (grounded,
-   recommendation first). It becomes a normal decision with its `Discarded` line.
-2. **The engineer assumes an answer and moves on.** It becomes a decision carrying an
-   `Assumption to validate` line: the assumption, who must confirm it, and the
-   fallback if they refuse. The card ships resolved, with the risk named.
-3. **The engineer takes it to product and the analysis waits.** Then STOP — write the
-   working copy to the scratchpad, tell the engineer exactly which answers you are
-   waiting on, and do not touch ClickUp. Say plainly that the document is held, not
-   abandoned, and that re-running the skill (or resuming the conversation) picks it up
-   once the answers land.
-
-Push back rather than nudging the engineer into option 3 by default — options 1 and 2
-are usually available, and the whole point of this skill is that the engineer holds
-the pen. If an item is genuinely a product call the engineer cannot make (pricing,
-legal, a promise made to a specific client), option 3 is the right answer and you
-should say so.
-
-**Escape hatch — the engineer asks to register the partial analysis anyway.** Real
-case: product did not answer in time and the engineer has to move to another demand,
-so the work done so far must not sit only in a chat session. This is allowed. Two
-hard rules: **never offer it proactively** — it exists only when the engineer asks
-for it in their own words, otherwise it dissolves the gate — and **the card must
-never read as a finished analysis.** When it happens:
-
-- Push exactly as Step 7 describes (append after a `---`, never overwrite).
-- Open the appended block with a one-line status marker, in the card's language,
-  saying the analysis is partial and naming what is pending. It goes above the
-  TL;DR, and it is the ONLY thing allowed above it.
-- Add an `## Awaiting product` section — the one exception to "no open items" —
-  listing each unanswered question, who was asked and when, and, for each,
-  **which decisions it can still change**. An open item with no stated blast radius
-  is useless to whoever picks the card up.
-- Decisions that do not depend on the open items are written as normal, settled
-  decisions. Decisions that do either carry the `Assumption to validate` line or are
-  marked provisional in their own text — never left looking final.
-- Close by telling the engineer, in one line, what to edit on the card once each
-  answer lands.
-
-Only when zero items remain open — or the engineer has explicitly invoked this escape
-hatch — do you proceed to Step 6.
+When no reasonable assumption exists, because any answer would be a guess about a promise
+or a price, still write the item as an assumption with its fallback and say in the decision
+paragraph that the reviewer must take it to product before approving. The card goes to
+review either way: the review step, not the dev, owns the conversation with product.
 
 ## Step 6 — Produce the decisions document
 Write the document in the **same language as the card** (translate the section headings
@@ -246,10 +218,6 @@ and left out", "Must keep holding" and the reuse map — nowhere else.
 Use this structure (adapt as needed). The TL;DR leads, the reuse map comes LAST.
 
 ```
-<Status marker — ONLY in the Step 5.5 escape-hatch case, one line, nothing else
-above it: "Análise técnica parcial — <N> ponto(s) aguardando produto, ver
-'Aguardando produto' ao final.">
-
 ## TL;DR
 <ONE sentence: what is born and where.>
 
@@ -268,9 +236,9 @@ sub-labels. For a contradiction, the first sentence says what the system does to
 the source ("Hoje: … (`benefits.md`, card X)"). When 3c found the rule was deliberate,
 cite the PR/card. If the decision had no real alternative, say so in the last sentence.>
 
-**Assumption to validate:** <ONE sentence, ONLY when the engineer settled a
-product-flavoured question by assuming an answer: the assumption, who confirms it, and
-the fallback if they refuse — normally a discarded option.>
+**Assumption to validate:** <ONE sentence, ONLY on a product item (Step 5.5): the
+assumption, who confirms it, and the fallback if they refuse — normally a discarded
+option.>
 
 *   Discarded
     *   <option not chosen> — <why it lost, one sentence>
@@ -286,16 +254,12 @@ already answered by the card, not technical, or a real gap parked for a separate
 ## Decide with a prototype   ← only if any empirical decision
 ### <decision title>
 <Question: the one thing being decided. Variants: the 2–3 to build, throwaway.
-Criterion: the observation that picks the winner, with the threshold the engineer set.
+Criterion: the observation that picks the winner, with the threshold the dev set.
 Constraint: what every variant must respect. Short sentences, no recommendation.>
 
 ## Must keep holding   ← only if 3b found flows
 <One bullet per business rule from the flows that this change must not break, with the
 flow file as source. This is the dev's regression list.>
-
-## Awaiting product   ← ONLY in the Step 5.5 escape-hatch case
-<One bullet per unanswered question: the question, who was asked and when, and which
-decisions above it can still change.>
 
 ## What already exists (reuse map)   ← ALWAYS LAST
 <Only the existing pieces that a decision above actually relies on — reuse, extension,
@@ -303,9 +267,10 @@ or a gap that shaped a choice. Each row should map to a decision.>
 <table: need | EXISTS / PARTIAL / MISSING | file path(s)>
 ```
 
-### The TL;DR is for sizing at a glance
-A dev reads the sentence and the table and knows which apps they will open, how much is
-born, and where the risk is — enough to size the work. Rules:
+### The TL;DR is the "how"
+The reviewer reads the sentence and the table and knows which apps the dev will open, how
+much is born, and where the risk is — enough to judge the approach before execution. It
+replaces a written implementation plan. Rules:
 - **Write it last**, from the decisions as settled, so the counts match what follows.
 - **One row per area touched** (each app, the API, packages); omit untouched areas.
 - **"What changes" names things, never explains them.** No file paths, no function names
@@ -323,24 +288,30 @@ its paragraph the shape as code: the use case signature, the DTO fields, and one
 how the call site uses it. A sketch that already needs `any` or a forced cast is a sign the
 design is wrong — revisit the decision before writing it down.
 
-Do NOT include a phase / PR breakdown. The dev who picks up the card owns the execution.
-Stop at the decisions and their implications.
+Do NOT include a phase / PR breakdown. The TL;DR already says what changes and where; the
+order of the work is settled in EXECUTANDO. Stop at the decisions and their implications.
 
 ## Step 7 — Deliver it back to the card
 Read `references/clickup-format.md` first — it holds the rules ClickUp enforces on
 markdown (whitespace, toggle lists, bold next to code, appending).
-- Present the full markdown in the chat for the engineer to review/edit.
+- Present the full markdown in the chat for the dev to review/edit.
 - Offer to push it to ClickUp. When accepted, ALWAYS **update the card description**
   (`clickup_update_task`), **appending** the document to the END of the existing
   description after a `---` divider — never overwrite what's already there, and never
   post it as a comment instead.
-- Confirm with the engineer before writing — updating a card description is
+- Confirm with the dev before writing — updating a card description is
   outward-facing and hard to undo.
+- In the same confirmation, offer to move the card to the review status. Find it with
+  the `list_status` operator on the card's list (`clickup_execute_operator`): the status
+  whose name contains both "aguard" and "análise técnica", case-insensitive. Set it with
+  `clickup_update_task` after the description is written. If no such status exists, say
+  so and leave the status alone. Never move the card to EXECUTANDO: approving the spec is
+  the reviewer's call.
 - Do NOT commit anything to the repo.
 </workflow>
 
 <guardrails>
-- Restate the card in your own words and get the engineer's ok before investigating.
+- Restate the card in your own words and get the dev's ok before investigating.
 - Ground before you offer: no option without a codebase fact, a flow rule, or a recorded
   reason behind it.
 - Contradictions between the card and the system are decisions, resolved first, with the
@@ -356,10 +327,9 @@ markdown (whitespace, toggle lists, bold next to code, appending).
   decision with no such block either had no real alternative (say so explicitly in the
   decision paragraph) or was never a decision and should be cut.
 - The TL;DR is one sentence, one table and two lines; sizes are counts, never time.
-- **Never offer the ClickUp push while an item is still open for product.** Run the Step
-  5.5 gate first. The single exception is the engineer explicitly asking to register the
-  partial analysis: then push it marked partial at the top, with "Awaiting product" naming
-  what each pending answer can still change. Never suggest that route yourself.
+- **The dev never decides a product item.** Every one becomes an `Assumption to validate`
+  that the reviewer confirms in AGUARD | ANÁLISE TÉCNICA. Run the Step 5.5 gate before
+  offering the ClickUp push.
 - Output stays out of the repository; its home is the ClickUp card.
 - Match the card's language in the document.
 - The document is a continuation of the card, never a standalone report: no title, no
